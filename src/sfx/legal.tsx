@@ -129,19 +129,19 @@ function Datenschutz({ text, onDeleteAll }: { text: Copy; onDeleteAll: () => boo
           Ein Sitzungsspeicher (<span className="font-mono text-fg">sessionStorage</span>) wird nicht verwendet.
         </p>
         <p>
-          Deine Sound-Bibliothek (Name, Zeitpunkt und die Regler-Werte jedes gespeicherten Sounds) liegt im 
+          Deine Sound-Bibliothek (Name, Zeitpunkt und die Regler-Werte jedes gespeicherten Sounds) liegt im{" "}
           <span className="font-mono text-fg">localStorage</span> unter <span className="font-mono text-fg">consolecheat-sfx-v1</span>. Alles bleibt in diesem Browser. Der
           Schlüssel entsteht erst, wenn du einen Sound speicherst. Eine unlesbare Fassung oder eine andere Version fällt
           auf eine leere Bibliothek zurück und bringt die Seite nicht zum Absturz. Die Sounds verlassen den Browser nicht.
         </p>
         <p>
-          Sprache und Erscheinungsbild liegen, wie bei den anderen consolecheat-Werkzeugen auf diesem Host, im 
-          <span className="font-mono text-fg">localStorage</span> unter <span className="font-mono text-fg">consolecheat-lang</span> und 
+          Sprache und Erscheinungsbild liegen, wie bei den anderen consolecheat-Werkzeugen auf diesem Host, im{" "}
+          <span className="font-mono text-fg">localStorage</span> unter <span className="font-mono text-fg">consolecheat-lang</span> und{" "}
           <span className="font-mono text-fg">consolecheat-theme</span>. Weitere Schlüssel schreibt diese Seite nicht.
         </p>
         <h2 className="mt-2 font-display text-2xl font-semibold tracking-tight text-fg">Löschen</h2>
         <p>
-          Der Knopf unten entfernt nach einer zweiten Bestätigung nur den Schlüssel 
+          Der Knopf unten entfernt nach einer zweiten Bestätigung nur den Schlüssel{" "}
           <span className="font-mono text-fg">consolecheat-sfx-v1</span>. Sprache und Erscheinungsbild bleiben, ebenso die Daten der anderen
           consolecheat-Werkzeuge. Dieselben Daten lassen sich auch in den Einstellungen des Browsers für diese Website
           löschen.
@@ -155,7 +155,7 @@ function Datenschutz({ text, onDeleteAll }: { text: Copy; onDeleteAll: () => boo
         <p>
           GitHub liefert die Dateien über GitHub Pages aus. GitHub kann als Host Verbindungsdaten verarbeiten,
           insbesondere die IP-Adresse, den Zeitpunkt und die aufgerufene Adresse. Dieses Projekt betreibt keinen
-          eigenen Server und erhält diese Protokolle nicht. 
+          eigenen Server und erhält diese Protokolle nicht.{" "}
           <a
             href="https://docs.github.com/en/site-policy/privacy-policies/github-privacy-statement"
             className="text-steel underline-offset-4 hover:underline"
@@ -201,13 +201,13 @@ function Datenschutz({ text, onDeleteAll }: { text: Copy; onDeleteAll: () => boo
           <span className="font-mono text-fg">sessionStorage</span> is not used.
         </p>
         <p>
-          Your sound library (the name, time, and slider values of each saved sound) uses the 
+          Your sound library (the name, time, and slider values of each saved sound) uses the{" "}
           <span className="font-mono text-fg">localStorage</span> key <span className="font-mono text-fg">consolecheat-sfx-v1</span>. Everything stays in this browser. The key is
           created only when you save a sound. A value that does not parse, or a different version, falls back to an
           empty library and does not crash the page. The sounds never leave the browser.
         </p>
         <p>
-          Language and appearance use <span className="font-mono text-fg">localStorage</span> keys <span className="font-mono text-fg">consolecheat-lang</span> and 
+          Language and appearance use <span className="font-mono text-fg">localStorage</span> keys <span className="font-mono text-fg">consolecheat-lang</span> and{" "}
           <span className="font-mono text-fg">consolecheat-theme</span>, the same keys as the other consolecheat tools on this host. This page writes
           no other keys.
         </p>
@@ -226,7 +226,7 @@ function Datenschutz({ text, onDeleteAll }: { text: Copy; onDeleteAll: () => boo
         <p>
           GitHub serves the files through GitHub Pages. As the host, GitHub can process connection data, in particular
           the IP address, the time, and the requested address. This project does not run its own server and does not
-          receive those logs. 
+          receive those logs.{" "}
           <a
             href="https://docs.github.com/en/site-policy/privacy-policies/github-privacy-statement"
             className="text-steel underline-offset-4 hover:underline"
