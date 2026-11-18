@@ -44,6 +44,13 @@ test("every param, wave, and preset has a label in both languages", () => {
     for (const wave of WAVES) assert.ok(copy[lang].waves[wave], `${lang} ${wave}`);
     for (const id of PRESETS) assert.ok(copy[lang].presets[id], `${lang} ${id}`);
   }
+  for (const key of ["seedLabel", "seedHint", "seedPlaceholder", "seedApply", "seedInvalid", "seedApplied", "seedNone"] as const) {
+    assert.ok(copy.de[key] && copy.en[key], key);
+  }
+  assert.equal(copy.de.seedLabel, "Seed");
+  assert.equal(copy.de.seedApply, "Aus Seed erzeugen");
+  assert.equal(copy.en.seedApply, "Generate from seed");
+  assert.equal(fill(copy.de.seedApplied, { name: "Münze", seed: 7 }), "Münze aus Seed 7 erzeugt.");
   assert.equal(copy.de.presets.jump, "Sprung");
   assert.equal(copy.de.presets.coin, "Münze");
   assert.equal(copy.de.presets.explosion, "Explosion");

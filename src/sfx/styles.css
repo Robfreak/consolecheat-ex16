@@ -301,6 +301,10 @@
   .seg label {
     padding-inline: 0.6rem;
   }
+
+  .seed-apply {
+    width: 100%;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

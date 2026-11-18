@@ -11,6 +11,7 @@ Inoffiziell. Nicht von Sony.
 ## Features
 
 - **Vorlagen (presets):** Sprung, Münze, Explosion, Power-up, plus Laser and Treffer. Each click rolls new values in a range that fits the sound, after the classic sfxr generators. **Zufall** rolls fully random values that stay audible.
+- **Seed:** the field under the waveform shows the seed of the current sound. Type a whole number from 0 to 4294967295 and press Enter or **Aus Seed erzeugen** to regenerate it deterministically with the preset or Zufall you picked last. A hand-edited or loaded sound has no seed, so the field stays empty (`src/sfx/seed.ts`).
 - **Regler (sliders), sfxr-style:**
   - Wellenform: Rechteck (with Pulsbreite and Pulsbreiten-Sweep), Sägezahn, Sinus, Dreieck, Rauschen
   - Hüllkurve: Anstieg, Halten, Punch, Abklingen (shown in ms)
@@ -35,7 +36,7 @@ The synth (`src/sfx/synth.ts`) is a pure function: params in, `Float32Array` out
 | Rückgängig | Ctrl+Z (Strg+Z, Cmd+Z) | |
 | Wiederholen | Ctrl+Y or Ctrl+Shift+Z | |
 
-While a text field has focus, the shortcuts do nothing. A focused button or radio keeps Space for itself. A focused slider keeps its arrow keys but still passes Ctrl+Z and Ctrl+Y. The gamepad is polled with `requestAnimationFrame` and edge-detected, so a held button fires once. Browsers do not count a gamepad press as a user gesture, so after the page opens, click once or press a key before × can play sound.
+While a text field has focus, the shortcuts do nothing. A focused button or radio keeps Space for itself. A focused slider keeps its arrow keys but still passes Ctrl+Z and Ctrl+Y. The gamepad is polled with `requestAnimationFrame` and edge-detected, so a held button fires once. The first poll of a pad (also after a reconnect or with a different pad id) only stores the button state, so a button already held when the pad connects or the page loads does nothing. Browsers do not count a gamepad press as a user gesture, so after the page opens, click once or press a key before × can play sound.
 
 Sliders have labels and `<output>` values, the status line is `aria-live`, and focus rings stay visible. The layout works down to 390px.
 

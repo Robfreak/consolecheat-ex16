@@ -23,6 +23,7 @@ import { freshSeed } from "./prng.ts";
 import { generatePreset, MAIN_PRESETS, PRESETS, randomParams, type PresetId } from "./presets.ts";
 import { baseFrequencyHz, renderSfx, SAMPLE_RATE } from "./synth.ts";
 import { encodeWav } from "./wav.ts";
+import { paramsFromSeed, parseSeed, type SeedSource } from "./seed.ts";
 
 const START_SEED = 20261118;
 
@@ -33,6 +34,14 @@ const GROUPS: { heading: keyof Copy; keys: NumKey[] }[] = [
   { heading: "filterHeading", keys: ["lpfFreq", "lpfRamp", "lpfResonance", "hpfFreq", "hpfRamp"] },
   { heading: "outputHeading", keys: ["volume"] },
 ];
+
+// The seed each generated sound came from. Keyed by the params object, so undo and redo
+// show the right seed, and a hand-edited or loaded sound shows none.
+const seeds = new WeakMap<SfxParams, number>();
+function seeded(params: SfxParams, seed: number): SfxParams {
+  seeds.set(params, seed);
+  return params;
+}
 
 const cache = new WeakMap<SfxParams, Float32Array>();
 function render(params: SfxParams): Float32Array {
@@ -169,10 +178,16 @@ function Slider({
 }
 
 export function Generator({ text }: { text: Copy }) {
-  const [history, setHistory] = useState<History<SfxParams>>(() => createHistory(generatePreset("coin", START_SEED)));
+  const [history, setHistory] = useState<History<SfxParams>>(() => createHistory(seeded(generatePreset("coin", START_SEED), START_SEED)));
   const params = history.present;
   const samples = useMemo(() => render(params), [params]);
   const [label, setLabel] = useState<string>(() => text.presets.coin);
+  const [source, setSource] = useState<SeedSource>({ kind: "preset", preset: "coin" });
+  const currentSeed = seeds.get(params) ?? null;
+  const [seedDraft, setSeedDraft] = useState(() => String(START_SEED));
+  useEffect(() => {
+    setSeedDraft(currentSeed === null ? "" : String(currentSeed));
+  }, [currentSeed, params]);
   const [name, setName] = useState("");
   const [notice, setNotice] = useState("");
   const [playing, setPlaying] = useState(false);
@@ -282,7 +297,9 @@ export function Generator({ text }: { text: Copy }) {
   }
 
   function applyPreset(id: PresetId, fromGesture: boolean) {
-    const next = generatePreset(id, freshSeed());
+    const seed = freshSeed();
+    const next = seeded(generatePreset(id, seed), seed);
+    setSource({ kind: "preset", preset: id });
     update(next, null);
     setLabel(textRef.current.presets[id]);
     say(fill(textRef.current.generated, { name: textRef.current.presets[id] }));
@@ -290,11 +307,31 @@ export function Generator({ text }: { text: Copy }) {
   }
 
   function applyRandom(fromGesture: boolean) {
-    const next = randomParams(freshSeed());
+    const seed = freshSeed();
+    const next = seeded(randomParams(seed), seed);
+    setSource({ kind: "random" });
     update(next, null);
     setLabel(textRef.current.random);
     say(textRef.current.randomized);
     play(fromGesture, render(next));
+  }
+
+  function sourceName(from: SeedSource): string {
+    return from.kind === "preset" ? textRef.current.presets[from.preset] : textRef.current.random;
+  }
+
+  function applySeed() {
+    const seed = parseSeed(seedDraft);
+    if (seed === null) {
+      say(textRef.current.seedInvalid);
+      return;
+    }
+    const next = seeded(paramsFromSeed(source, seed), seed);
+    update(next, null);
+    const name = sourceName(source);
+    setLabel(name);
+    say(fill(textRef.current.seedApplied, { name, seed }));
+    play(true, render(next));
   }
 
   function doUndo() {
@@ -337,13 +374,17 @@ export function Generator({ text }: { text: Copy }) {
     let running = false;
     const poll = () => {
       let any = false;
+      const seen: number[] = [];
       for (const pad of navigator.getGamepads()) {
         if (!pad) continue;
         any = true;
-        const actions = tracker.step(pad.index, pad.buttons);
+        seen.push(pad.index);
+        // The first poll of a pad only stores its buttons, so a button held at connect does nothing.
+        const actions = tracker.step(pad);
         if (isTypingTarget(targetOf(document.activeElement))) continue;
         for (const action of actions) runRef.current(action, false);
       }
+      tracker.retain(seen);
       if (any) frame = requestAnimationFrame(poll);
       else running = false;
     };
@@ -539,6 +580,42 @@ export function Generator({ text }: { text: Copy }) {
             <span className="font-medium text-fg">{label}</span> · {text.durationLabel}:{" "}
             {fill(text.durationValue, { ms, samples: samples.length })}
           </p>
+
+          <form
+            className="seed-form flex flex-col gap-1"
+            data-testid="seed-form"
+            onSubmit={(event) => {
+              event.preventDefault();
+              applySeed();
+            }}
+          >
+            <label htmlFor="sfx-seed" className="text-sm font-medium text-fg">
+              {text.seedLabel}
+            </label>
+            <div className="flex flex-wrap gap-2">
+              <input
+                id="sfx-seed"
+                data-testid="seed"
+                className="field min-w-0 flex-1 font-mono"
+                type="text"
+                inputMode="numeric"
+                autoComplete="off"
+                spellCheck={false}
+                maxLength={10}
+                placeholder={text.seedPlaceholder}
+                aria-describedby="sfx-seed-hint"
+                value={seedDraft}
+                onChange={(event) => setSeedDraft(event.target.value)}
+              />
+              <button type="submit" className="btn btn-ghost seed-apply" data-testid="seed-apply">
+                {text.seedApply}
+              </button>
+            </div>
+            <p id="sfx-seed-hint" className="text-xs text-subtle">
+              {currentSeed === null ? `${text.seedNone} ` : ""}
+              {fill(text.seedHint, { source: sourceName(source) })}
+            </p>
+          </form>
 
           <div className="flex flex-wrap gap-2">
             {playing ? (
