@@ -107,18 +107,44 @@ export function padActions(previous: readonly boolean[], current: readonly boole
   return actions;
 }
 
-/** Keeps the last button state per gamepad index, so a held button fires once. */
+/** What the previous poll saw for one pad: which pad it was, and which buttons were down. */
+export type PadMemory = { key: string; buttons: boolean[] };
+
+export type PadInput = { index: number; id?: string; buttons: readonly { pressed: boolean }[] };
+
+function padKey(pad: PadInput): string {
+  return `${pad.index}:${pad.id ?? ""}`;
+}
+
+/**
+ * One poll of one pad. The first poll of a pad (no memory, after a disconnect, or a different
+ * pad id at the same index) only stores the button state and returns no actions, so a button
+ * that is already held when the pad connects or the page loads does not fire. No pad clears
+ * the memory.
+ */
+export function pollPad(pad: PadInput | null, memory: PadMemory | null): { actions: Action[]; memory: PadMemory | null } {
+  if (!pad) return { actions: [], memory: null };
+  const next: PadMemory = { key: padKey(pad), buttons: pad.buttons.map((button) => Boolean(button.pressed)) };
+  if (!memory || memory.key !== next.key) return { actions: [], memory: next };
+  return { actions: padActions(memory.buttons, next.buttons), memory: next };
+}
+
+/** Keeps the last poll per gamepad index, so a held button fires once and never on the first poll. */
 export function createPadTracker() {
-  const last = new Map<number, boolean[]>();
+  const last = new Map<number, PadMemory>();
   return {
-    step(index: number, buttons: readonly { pressed: boolean }[]): Action[] {
-      const current = buttons.map((button) => Boolean(button.pressed));
-      const actions = padActions(last.get(index) ?? [], current);
-      last.set(index, current);
-      return actions;
+    step(pad: PadInput): Action[] {
+      const result = pollPad(pad, last.get(pad.index) ?? null);
+      if (result.memory) last.set(pad.index, result.memory);
+      return result.actions;
     },
     forget(index: number) {
       last.delete(index);
+    },
+    /** Forgets every pad that was not seen in this poll, so a reconnect starts fresh. */
+    retain(seen: Iterable<number>) {
+      const keep = new Set(seen);
+      for (const index of [...last.keys()]) if (!keep.has(index)) last.delete(index);
     },
   };
 }
