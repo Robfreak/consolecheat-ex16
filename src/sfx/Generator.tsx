@@ -23,7 +23,7 @@ import { freshSeed } from "./prng.ts";
 import { generatePreset, MAIN_PRESETS, PRESETS, randomParams, type PresetId } from "./presets.ts";
 import { baseFrequencyHz, renderSfx, SAMPLE_RATE } from "./synth.ts";
 import { encodeWav } from "./wav.ts";
-import { paramsFromSeed, parseSeed, type SeedSource } from "./seed.ts";
+import { paramsFromSeed, parseSeed, shownSeed, type SeedSource } from "./seed.ts";
 
 const START_SEED = 20261118;
 
@@ -183,7 +183,10 @@ export function Generator({ text }: { text: Copy }) {
   const samples = useMemo(() => render(params), [params]);
   const [label, setLabel] = useState<string>(() => text.presets.coin);
   const [source, setSource] = useState<SeedSource>({ kind: "preset", preset: "coin" });
-  const currentSeed = seeds.get(params) ?? null;
+  // Set when a sound comes from the library or a file: it has no seed, even if its params
+  // equal the current sound and the history keeps the old (seeded) object.
+  const [cleared, setCleared] = useState<SfxParams | null>(null);
+  const currentSeed = shownSeed(params, (p) => seeds.get(p), cleared);
   const [seedDraft, setSeedDraft] = useState(() => String(START_SEED));
   useEffect(() => {
     setSeedDraft(currentSeed === null ? "" : String(currentSeed));
@@ -478,7 +481,9 @@ export function Generator({ text }: { text: Copy }) {
   function loadSound(id: string) {
     const sound = findSound(lib.library, id);
     if (!sound) return;
-    update({ ...sound.params }, null);
+    const loaded = { ...sound.params };
+    update(loaded, null);
+    setCleared(sameParams(loaded, paramsRef.current) ? paramsRef.current : loaded);
     setLabel(sound.name);
     say(fill(text.loaded, { name: sound.name }));
   }
@@ -524,6 +529,7 @@ export function Generator({ text }: { text: Copy }) {
       return;
     }
     update(result.params, null);
+    setCleared(sameParams(result.params, paramsRef.current) ? paramsRef.current : result.params);
     setLabel(result.name);
     setName(result.name);
     say(fill(text.imported, { name: result.name }));

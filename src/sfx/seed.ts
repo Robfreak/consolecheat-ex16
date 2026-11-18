@@ -18,3 +18,13 @@ export function parseSeed(raw: string): number | null {
 export function paramsFromSeed(source: SeedSource, seed: number): SfxParams {
   return source.kind === "preset" ? generatePreset(source.preset, seed) : randomParams(seed);
 }
+
+/**
+ * The seed the field shows. `cleared` is the params object that was current when a sound was
+ * loaded from the library or a file. The history skips a load with identical params, so the
+ * present object can still carry its seed; marking it cleared hides the seed anyway.
+ */
+export function shownSeed<P extends object>(params: P, lookup: (params: P) => number | undefined, cleared: P | null): number | null {
+  if (cleared !== null && params === cleared) return null;
+  return lookup(params) ?? null;
+}
